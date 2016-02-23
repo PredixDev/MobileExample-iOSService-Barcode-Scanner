@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title> PM Barcode scanner iOS Native service Example</title>
+	<style>
+	div.scroll {
+		overflow: scroll;
+		max-height: 600px;
+		width: 90%;
+		position: relative;
+		top: 40px;
+		margin: 10px 20px;
+		color: orange;
+		border-style: dotted;
+		border-color: cyan;
+	}
+	.textarea {
+		width: 98%;
+	}
+	.button {
+		background-color: cyan;
+		border: none;
+		color: white;
+		padding: 15px 32px;
+		text-align: center;
+		text-decoration: none;
+		display: inline-block;
+		font-size: 18px;
+		margin: 40px 80px;
+	}
+	</style>
+	<script src="BarcodeScanner.js"></script>
+
+</head>
+
+<body>
+	<input type="button" class="button" value="Scan Barcode" onClick="scanner.scanBarcode(document.getElementById('idtextarea'))">
+
+	<div  class="scroll" >
+		<div id="idstatus"> Press 'Scan Barcode'. </div>
+		<textarea id="idtextarea" class="textarea" rows="15" cols="100">
+
+		</textarea>
+	</div>
+
+
+</body>
+</html>
