@@ -16,9 +16,10 @@ To get started, follow this documentation:
 
 1. Add the `BarcodeScannerService.swift` file from this repo to your container project.
 2. Open your Predix Mobile container app project. 
-3. In the Project Manager in left-hand pane, expand the PredixMobileReferenceApp project, then expand the PredixMobileReferenceApp group. Within that group, expand the Classes group. 
+3. In the Project Manager in left-hand pane, expand the PredixMobileiOSApp project, then expand the PredixMobileiOSApp group. Within that group, expand the Classes group. 
 4. In this group, create a group called "Services".
-5.Add the file `BarcodeScannerService.swift` to this group, either by dragging from Finder, or by using the Add Files dialog in XCode. When doing this, ensure the BarcodeScannerService.swift file is copied to your project, and added to your PredixMobileReferenceApp target.
+5. Add the file `BarcodeScannerService.swift` to this group, either by dragging from Finder, or by using the Add Files dialog in XCode. When doing this, ensure the BarcodeScannerService.swift file is copied to your project, and added to your PredixMobileiOSApp target.
+6. Add the "Privacy - Camera Usage Description" key to your Predix Mobile container app's Info.plist file with a string value explaining to the user how the app uses this data. for example you could use "Needed for bar code scanning functionality."
 
 ## Step 2 - Register your new service
 
