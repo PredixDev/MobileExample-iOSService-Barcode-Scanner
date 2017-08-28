@@ -27,12 +27,10 @@ import PredixMobileSDK
     /// This is a purposeful architectural decision. Services should be stateless and interaction with them ephemeral. A static
     /// object enforces this direction.
 
-
     /// the serviceIdentifier property defines first path component in the URL of the service.
-    static var serviceIdentifier : String {get { return "barcodescanner" }}
+    static var serviceIdentifier: String {get { return "barcodescanner" }}
 
-
-//  MARK: performRequest - entry point for request
+// MARK: performRequest - entry point for request
     /**
         performRequest is the meat of the service. It is where all requests to the service come in.
 
@@ -58,15 +56,13 @@ import PredixMobileSDK
             block must be called, and it must be called only once per performRequest call. Once the requestComplete block is called, no additional
             processing should happen in the service, and no other blocks should be called.
     */
-    static func performRequest(_ request : URLRequest, response : HTTPURLResponse, responseReturn : @escaping responseReturnBlock, dataReturn : @escaping dataReturnBlock, requestComplete: @escaping requestCompleteBlock)
-    {
+    static func performRequest(_ request: URLRequest, response: HTTPURLResponse, responseReturn : @escaping responseReturnBlock, dataReturn : @escaping dataReturnBlock, requestComplete: @escaping requestCompleteBlock) {
 
         /// First let's examine the request. In this example, we're going to expect only a GET request, and the URL path should only be the serviceIdentifier
 
         /// we'll use a guard statement here just to verify the request object is valid. The HTTPMethod and URL properties of a NSURLRequest
         /// are optional, and we need to ensure we're dealing with a request that contains them.
-        guard let url = request.url else
-        {
+        guard let url = request.url else {
             /**
                 if the request does not contain a URL or a HTTPMethod, then we return a error. We'll also return an error if the URL
                 does not contain a path. In a normal interaction this would never happen, but we need to be defensive and expect anything.
@@ -97,8 +93,7 @@ import PredixMobileSDK
             In your own services you may want to be more lenient, simply ignoring extra path or parameters.
         */
 
-        guard url.path.lowercased() == "/\(self.serviceIdentifier)" && url.query == nil else
-        {
+        guard url.path.lowercased() == "/\(self.serviceIdentifier)" && url.query == nil else {
             /// In this case, if the request URL is anything other than "http://pmapi/barcodescanner" we're returning a 400 status code.
             self.respondWithErrorStatus(.badRequest, response, responseReturn, requestComplete)
             return
@@ -106,17 +101,15 @@ import PredixMobileSDK
 
         /// now that we know our path is what we expect, we'll check the HTTP method. If it's anything other than "GET"
         /// we'll return a standard HTTP status used in that case.
-        guard request.httpMethod == "GET" else
-        {
+        guard request.httpMethod == "GET" else {
             /// According to the HTTP specification, a status code 405 (Method not allowed) must include an Allow header containing a list of valid methods.
             /// this  demonstrates one way to accomplish this.
-            let headers = ["Allow" : "GET"]
+            let headers = ["Allow": "GET"]
 
             /// This respondWithErrorStatus overload allows additional headers to be passed that will be added to the response.
-            self.respondWithErrorStatus(HTTPStatusCode.methodNotAllowed, response, responseReturn, requestComplete, headers)
+            self.respondWithErrorStatus(Http.StatusCode.methodNotAllowed, response, responseReturn, requestComplete, headers)
             return
         }
-
 
         /// Now we know that our path and method were correct, and we've handled error conditions, let's try scanning barcodes.
         let scanner = BarcodeScanner.sharedInstance
@@ -134,7 +127,7 @@ import PredixMobileSDK
                 requestComplete()
             },
             /// success handling closure
-            barcodeReturn: { (barcode : Data?) -> Void in
+            barcodeReturn: { (barcode: Data?) -> Void in
 
                 /// the default response object is always pre-set with a 200 (OK) response code, so can be directly used when there are no problems.
                 responseReturn(response)
@@ -150,43 +143,39 @@ import PredixMobileSDK
 
     }
 
-
 }
 
-
-//MARK: Barcodescanner
+// MARK: Barcodescanner
 /**
     Responsible for camera access and scanning barcode
 */
-class BarcodeScanner: NSObject, AVCaptureMetadataOutputObjectsDelegate
-{
+@objc class BarcodeScanner: NSObject, AVCaptureMetadataOutputObjectsDelegate {
     ///  a shared instance
     static let sharedInstance       = BarcodeScanner()
 
     typealias barcodeReturnBlock    = (Data?) -> Void
     typealias errorReturnBlock      = (Data?) -> Void
 
-    private var mErrorReturn:errorReturnBlock?
-    private var mBarcodeReturn:barcodeReturnBlock?
+    private var mErrorReturn: errorReturnBlock?
+    private var mBarcodeReturn: barcodeReturnBlock?
 
-    private var avCaptureSession:AVCaptureSession?
-    private var avCaptureVideoPreviewLayer:AVCaptureVideoPreviewLayer?
-    private var avCaptureMetadataOutput:AVCaptureMetadataOutput?
+    private var avCaptureSession: AVCaptureSession?
+    private var avCaptureVideoPreviewLayer: AVCaptureVideoPreviewLayer?
+    private var avCaptureMetadataOutput: AVCaptureMetadataOutput?
 
-    private var responseData :[String : Any]?
+    private var responseData: [String : Any]?
     private var topViewController: UIViewController?
-    private var btnDone:UIButton?
+    private var btnDone: UIButton?
 
     /// supported barcodes
-    let supportedBarcodes = [AVMetadataObjectTypeQRCode, AVMetadataObjectTypeCode128Code, AVMetadataObjectTypeCode39Code, AVMetadataObjectTypeCode93Code, AVMetadataObjectTypeUPCECode, AVMetadataObjectTypePDF417Code, AVMetadataObjectTypeEAN13Code, AVMetadataObjectTypeAztecCode]
+    let supportedBarcodes = [AVMetadataObject.ObjectType.qr, AVMetadataObject.ObjectType.code128, AVMetadataObject.ObjectType.code39, AVMetadataObject.ObjectType.code93, AVMetadataObject.ObjectType.upce, AVMetadataObject.ObjectType.pdf417, AVMetadataObject.ObjectType.ean13, AVMetadataObject.ObjectType.aztec]
 
     override init () {
         super.init()
 
     }
 
-    deinit
-    {
+    deinit {
 
     }
 
@@ -196,8 +185,7 @@ class BarcodeScanner: NSObject, AVCaptureMetadataOutputObjectsDelegate
             - errorReturnBlock      :   (Data?) -> Void
             - barcodeReturnBlock    :   (Data?) -> Void
     */
-    func scanBarcode(errorReturn : @escaping errorReturnBlock, barcodeReturn : @escaping barcodeReturnBlock)
-    {
+    func scanBarcode(errorReturn : @escaping errorReturnBlock, barcodeReturn : @escaping barcodeReturnBlock) {
         self.mErrorReturn   = errorReturn
         self.mBarcodeReturn = barcodeReturn
 
@@ -205,21 +193,16 @@ class BarcodeScanner: NSObject, AVCaptureMetadataOutputObjectsDelegate
 
     }
 
-//    MARK: private functions
+// MARK: private functions
     /**
         gets viewcontrolller which is presented on screen
     */
-    internal func getTopVC() ->UIViewController
-    {
-        var toReturn:UIViewController?
+    internal func getTopVC() -> UIViewController {
+        var toReturn: UIViewController?
         if let topController = UIApplication.shared.keyWindow?.rootViewController {
-            if(topController.presentedViewController == nil)
-            {
+            if(topController.presentedViewController == nil) {
                 toReturn = topController
-            }
-
-            else
-            {
+            } else {
                 while let presentedViewController = topController.presentedViewController {
                     toReturn = presentedViewController
                     break
@@ -232,43 +215,32 @@ class BarcodeScanner: NSObject, AVCaptureMetadataOutputObjectsDelegate
     /**
         returns a response to calling closure
     */
-    internal func sendResponse(msg: String, isError: Bool) /*-> Data*/
-    {
-        self.responseData = [String : Any]()
-        if(isError)
-        {
+    internal func sendResponse(msg: String, isError: Bool) /*-> Data*/ {
+        self.responseData = [String: Any]()
+        if(isError) {
             self.responseData!["error"] = msg
-        }
-        else
-        {
+        } else {
             self.responseData!["barocde"] = msg
         }
 
-        do
-        {
+        do {
             let toReturn = try JSONSerialization.data(withJSONObject: self.responseData!, options: JSONSerialization.WritingOptions(rawValue: 0))
-            if(isError)
-            {
+            if(isError) {
                 self.mErrorReturn!(toReturn)
-            }
-            else
-            {
+            } else {
                 self.mBarcodeReturn!(toReturn)
             }
-        }
-        catch let error
-        {
+        } catch let error {
             Logger.error("Error serializing user data into JSON: \(error)")
         }
 
     }
 
-
     /**
         Checks camera access and acts acordingly
     */
     internal func checkCamera() {
-        let authStatus = AVCaptureDevice.authorizationStatus(forMediaType: AVMediaTypeVideo)
+        let authStatus = AVCaptureDevice.authorizationStatus(for: AVMediaType.video)
         switch authStatus {
 
         case .authorized:
@@ -283,16 +255,14 @@ class BarcodeScanner: NSObject, AVCaptureMetadataOutputObjectsDelegate
             self.sendResponse(msg: "Restricted - User not authorized to access camera.", isError: true)
             break
 
-
         case .notDetermined:
             /// permission dialog not yet presented, requesting authorization now
-            AVCaptureDevice.requestAccess(forMediaType: AVMediaTypeVideo,
-                completionHandler: { (granted:Bool) -> Void in
+            AVCaptureDevice.requestAccess(for: AVMediaType.video,
+                completionHandler: { (granted: Bool) -> Void in
                     if granted {
                         print("access granted")
                         self.startCapture()
-                    }
-                    else {
+                    } else {
                         print("Denied - access denied")
                         self.sendResponse(msg: "Access to camera denied", isError: true)
                     }
@@ -307,63 +277,47 @@ class BarcodeScanner: NSObject, AVCaptureMetadataOutputObjectsDelegate
     */
     internal func startCapture() {
 
-        // If we find a device we'll store it here for later use
-        var avCaptureDevice : AVCaptureDevice?
-
-        if let avCaptureDevices = AVCaptureDevice.devices() {
-
-            /// Get an instance of the AVCaptureDevice class to initialize a device object and provide the video as the media type parameter.
-            /// let avCaptureDevice = AVCaptureDevice.defaultDeviceWithMediaType(AVMediaTypeVideo)
-
-            /// Loop through all the capture devices on this phone to see whats available
-            for device in avCaptureDevices {
-                
-                if let captureDevice = device as? AVCaptureDevice {
-                    /// Make sure this particular device supports video
-                    if (captureDevice.hasMediaType(AVMediaTypeVideo)) {
-                        /// Finally check the position and confirm we've got the back camera
-                        if(captureDevice.position == AVCaptureDevicePosition.back) {
-                            avCaptureDevice = captureDevice
-                            break
-                        }
-                    }
-                }
-            }
-        }
-
-        /// simulator?
-        if avCaptureDevice == nil {
+        /// Get the default video input device (the camera)
+        guard let captureDevice = AVCaptureDevice.default(for: .video) else {
             Logger.error("Error: no camera")
             self.sendResponse(msg: "No camera present", isError: true)
+            return
         }
-
 
         do {
             /// Get an instance of the AVCaptureDeviceInput class using the previous device object.
-            let avCaptureDeviceInput = try AVCaptureDeviceInput(device: avCaptureDevice)
+            let avCaptureDeviceInput = try AVCaptureDeviceInput(device: captureDevice)
 
             /// Initialize the captureSession object.
-            self.avCaptureSession = AVCaptureSession()
+            let captureSession = AVCaptureSession()
 
-            // captureSession.sessionPreset = AVCaptureSessionPresetLow not required
             /// Set the input device on the capture session.
-            self.avCaptureSession?.addInput(avCaptureDeviceInput)
+            if captureSession.canAddInput(avCaptureDeviceInput) {
+                captureSession.addInput(avCaptureDeviceInput)
+            }
 
             /// Initialize a AVCaptureMetadataOutput object and set it as the output device to the capture session.
-            self.avCaptureMetadataOutput = AVCaptureMetadataOutput()
-            self.avCaptureSession?.addOutput(self.avCaptureMetadataOutput!)
+            let captureMetadataOutput = AVCaptureMetadataOutput()
 
             /// Set delegate and use the default dispatch queue to execute the call back
-            self.avCaptureMetadataOutput?.setMetadataObjectsDelegate(self, queue: DispatchQueue.main)
-            
+            captureMetadataOutput.setMetadataObjectsDelegate(self, queue: DispatchQueue.main)
+
+            /// Set the output device on the capture session.
+            if captureSession.canAddOutput(captureMetadataOutput) {
+                captureSession.addOutput(captureMetadataOutput)
+            }
+
             /// Detect all the supported bar code
-            self.avCaptureMetadataOutput?.metadataObjectTypes = supportedBarcodes
+            captureMetadataOutput.metadataObjectTypes = captureMetadataOutput.availableMetadataObjectTypes
+
+            self.avCaptureSession = captureSession
+            self.avCaptureMetadataOutput = captureMetadataOutput
 
             /// Initialize the video preview layer and add it as a sublayer to the viewPreview view's layer.
-            self.avCaptureVideoPreviewLayer = AVCaptureVideoPreviewLayer(session: avCaptureSession)
-            self.avCaptureVideoPreviewLayer?.videoGravity = AVLayerVideoGravityResizeAspectFill
-            
-            self.topViewController = getTopVC()
+            self.avCaptureVideoPreviewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
+            self.avCaptureVideoPreviewLayer?.videoGravity = AVLayerVideoGravity.resizeAspectFill
+
+            self.topViewController = self.getTopVC()
             DispatchQueue.main.async {
                 self.avCaptureVideoPreviewLayer?.frame = self.topViewController!.view.layer.bounds
                 self.topViewController!.view.layer.addSublayer(self.avCaptureVideoPreviewLayer!)
@@ -372,19 +326,15 @@ class BarcodeScanner: NSObject, AVCaptureMetadataOutputObjectsDelegate
                 self.addDoneButton(view: self.topViewController!.view)
             }
 
-
-        } catch let error{
+        } catch let error {
             Logger.error(error.localizedDescription)
             self.sendResponse(msg: "unable to start video capture - \(error)", isError: true)
-//            return
         }
-
     }
 
-    internal func addDoneButton(view : UIView)
-    {
-        let btnWidth:CGFloat            = 100
-        let btnHeight:CGFloat           = 50
+    internal func addDoneButton(view: UIView) {
+        let btnWidth: CGFloat            = 100
+        let btnHeight: CGFloat           = 50
 
         self.btnDone                    = UIButton(type: UIButtonType.system) as UIButton
         self.btnDone!.backgroundColor   = UIColor.white
@@ -394,8 +344,7 @@ class BarcodeScanner: NSObject, AVCaptureMetadataOutputObjectsDelegate
         view.addSubview(self.btnDone!)
     }
 
-    internal func donePressed(sender:UIButton!)
-    {
+    @objc internal func donePressed(sender: UIButton!) {
         self.sendResponse(msg: "User cancelled", isError: true)
         self.dispose()
     }
@@ -403,15 +352,14 @@ class BarcodeScanner: NSObject, AVCaptureMetadataOutputObjectsDelegate
     /**
         Stops cpature process and removes camera view from screen
     */
-    internal func dispose()
-    {
+    internal func dispose() {
         self.avCaptureMetadataOutput!.setMetadataObjectsDelegate(nil, queue: DispatchQueue.main)
         DispatchQueue.main.async {
             UIView.animate(withDuration: 0.1,
                 animations: {
 ///                   TODO: some animation if required
                 },
-                completion: {(value: Bool) in
+                completion: {(_: Bool) in
                     self.btnDone!.removeFromSuperview()
                     self.avCaptureVideoPreviewLayer?.removeFromSuperlayer()
             })
@@ -419,31 +367,28 @@ class BarcodeScanner: NSObject, AVCaptureMetadataOutputObjectsDelegate
         }
     }
 
-
-    //    MARK: Delegate for AVCapture
+    // MARK: Delegate for AVCapture
     /**
         whenever the output captures and emits new objects, as specified by its metadataObjectTypes property.
     */
-    func captureOutput(_ captureOutput: AVCaptureOutput!, didOutputMetadataObjects metadataObjects: [Any]!, from connection: AVCaptureConnection!) {
+    @objc func metadataOutput(_ output: AVCaptureMetadataOutput, didOutput metadataObjects: [AVMetadataObject], from connection: AVCaptureConnection) {
 
         /// Check if the metadataObjects array is not nil and it contains at least one object.
-        guard metadataObjects != nil && metadataObjects.count > 0 else
-        {
+        guard metadataObjects.count > 0 else {
             self.sendResponse(msg: "Barcode/QR code is detected", isError: true)
             return
         }
 
-        let metadataObj = metadataObjects[0] as! AVMetadataMachineReadableCodeObject
-
-        /// Filtering the scanned barcode type
-        if supportedBarcodes.contains(metadataObj.type) {
-            ///done scanning, calling dispose to stop scanning
-            DispatchQueue.main.async {
-                self.dispose()
-                if metadataObj.stringValue != nil {
-                    print(metadataObj.stringValue)
-                    self.sendResponse(msg: metadataObj.stringValue, isError: false)
-
+        if let metadataObj = metadataObjects[0] as? AVMetadataMachineReadableCodeObject {
+            /// Filtering the scanned barcode type
+            if supportedBarcodes.contains(metadataObj.type) {
+                ///done scanning, calling dispose to stop scanning
+                DispatchQueue.main.async {
+                    self.dispose()
+                    if let metadataString = metadataObj.stringValue {
+                        print(metadataString)
+                        self.sendResponse(msg: metadataString, isError: false)
+                    }
                 }
             }
         }

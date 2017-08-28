@@ -27,11 +27,11 @@ The `BarcodeScannerService.swift` file contains all the code needed for our exam
 
 1. In the `AppDelegate.swift` file, navigate to the application: didFinishLaunchingWithOptions: method. In this method, you will see a line that looks like this:
 
-  'PredixMobilityConfiguration.loadConfiguration()'
+  `PredixMobilityConfiguration.loadConfiguration()`
 
 2. Directly after that line, add the following:
 
-  'PredixMobilityConfiguration.additionalBootServicesToRegister = [BarcodeScannerService.self]'
+  `PredixMobilityConfiguration.additionalBootServicesToRegister.append(BarcodeScannerService.self)`
   
 This informs the iOS Predix Mobile SDK framework to load your new service when the app starts, thus making it available to your web app.
 
