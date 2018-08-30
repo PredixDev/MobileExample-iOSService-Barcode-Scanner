@@ -336,11 +336,11 @@ import PredixMobileSDK
         let btnWidth: CGFloat            = 100
         let btnHeight: CGFloat           = 50
 
-        self.btnDone                    = UIButton(type: UIButtonType.system) as UIButton
+        self.btnDone                    = UIButton(type: UIButton.ButtonType.system) as UIButton
         self.btnDone!.backgroundColor   = UIColor.white
-        self.btnDone!.setTitle("Done", for: UIControlState.normal)
+        self.btnDone!.setTitle("Done", for: UIControl.State.normal)
         self.btnDone!.frame             = CGRect(x: view.frame.size.width / 2 - btnWidth/2, y: view.frame.size.height - btnHeight, width: 100, height: 50)
-        self.btnDone!.addTarget(self, action: #selector(donePressed(sender:)), for: UIControlEvents.touchUpInside)
+        self.btnDone!.addTarget(self, action: #selector(donePressed(sender:)), for: UIControl.Event.touchUpInside)
         view.addSubview(self.btnDone!)
     }
 
